@@ -7,13 +7,14 @@ AI-Powered Digital Welfare Copilot for India
 This prototype is a working version of BharatAI built for a hackathon demo. It includes:
 
 - User authentication and protected routes
-- User profile collection for Indian citizens
-- Personalized scheme recommendations based on profile fields
-- Saved schemes and comparison features
-- Eligibility visualization and missed-benefits insights
+- User profile collection for Indian citizens (Read-only Dashboard + Edit Wizard)
+- Personalized scheme recommendations powered by TF-IDF and LLMs (`google/gemma-4-31b-it:free` via OpenRouter)
+- Ability to bookmark and save schemes to a dedicated "Saved Schemes" dashboard
+- Missed-benefits insights and comparison features
 - Scheme details pages with benefits, eligibility, documents, and application process
-- Basic AI assistant UI with backend persistence for chat history
-- English / Hindi language support via simple translation keys
+- Fully functional Multi-turn AI assistant with a WhatsApp-style UI and markdown rendering
+- English / Hindi language support via translation keys
+- Responsive, modern Tailwind UI with glassmorphism and intelligent routing
 
 ## End-to-end status
 
@@ -82,7 +83,7 @@ This prototype is a working version of BharatAI built for a hackathon demo. It i
   - Chat (`/api/chat`)
   - Saved Schemes (`/api/saved-schemes`)
 - Seeded demo schemes are inserted automatically on first run
-- Simple rule-based recommendation engine provides eligibility explanation and match score
+- Advanced Python-based recommendation engine (`recommend.py`) using TF-IDF cosine similarity and an LLM verification layer via OpenRouter.
 
 ## Folder structure
 
@@ -205,9 +206,8 @@ This prototype is a working version of BharatAI built for a hackathon demo. It i
 ## Remaining work
 
 - Add production-ready validation and error handling across forms
-- Enhance recommendation scoring and eligibility logic
-- Improve UI polish, mobile responsiveness, and onboarding flow
-- Integrate a real AI model instead of placeholder assistant responses
+- Expand the seeded database with more central and state schemes
+- Improve mobile responsiveness for complex data tables
 - Add deployment-ready configuration and environment docs
 
 ## Quick demo flow
