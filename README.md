@@ -85,6 +85,18 @@ This prototype is a working version of BharatAI built for a hackathon demo. It i
 - Seeded demo schemes are inserted automatically on first run
 - Advanced Python-based recommendation engine (`recommend.py`) using TF-IDF cosine similarity and an LLM verification layer via OpenRouter.
 
+## AI Implementation
+
+The AI capabilities in BharatAI are powered by a dual-layered approach to ensure both precision and natural language understanding:
+
+1. **Recommendation Engine (TF-IDF)**:
+   - A Python-based service uses TF-IDF vectorization and cosine similarity to match user profiles against scheme eligibility criteria.
+   - Extracts key features like age, gender, category, state, and occupation to compute a relevance score for each scheme.
+
+2. **LLM Verification & Chat (OpenRouter / `google/gemma-4-31b-it:free`)**:
+   - The top recommendations are verified using an LLM to explain *why* the user is eligible, generating a "reasoning" layer.
+   - A Multi-turn AI Assistant is implemented to allow users to ask follow-up questions, query specific details about schemes, and get help with the application process. It uses context from the user's profile and recommended schemes to provide personalized answers.
+
 ## Folder structure
 
 ### Root
