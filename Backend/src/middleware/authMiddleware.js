@@ -2,8 +2,11 @@ import jwt from "jsonwebtoken";
 import AuthUser from "../models/AuthUser.js";
 
 const authMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.replace("Bearer ", "");
+  let token = req.cookies?.token;
+  if (!token) {
+    const authHeader = req.headers.authorization || "";
+    token = authHeader.replace("Bearer ", "");
+  }
   if (!token) {
     return res.status(401).json({ message: "Authorization token missing" });
   }

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { getSavedSchemes } from "../services/dashboardApi.js";
 const SavedSchemesPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,7 +12,7 @@ const SavedSchemesPage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await getSavedSchemes();
+        const data = await getSavedSchemes(language);
         setSchemes(data);
       } catch (err) {
         setError(err.message);
@@ -21,7 +21,7 @@ const SavedSchemesPage = () => {
       }
     };
     void load();
-  }, []);
+  }, [language]);
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -53,7 +53,7 @@ const SavedSchemesPage = () => {
                   to={`/schemes/${scheme._id}`}
                   className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
                 >
-                  View Details
+                  {t("learnMore")}
                 </Link>
               </div>
             </article>

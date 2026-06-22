@@ -4,6 +4,7 @@ const defaultSchemes = [
   {
     schemeName: "Pradhan Mantri Kaushal Vikas Yojana",
     category: "OBC",
+    state: "Maharashtra",
     description: "Skill training and placement support for youth.",
     benefits: ["Free skill training", "Certification", "Placement assistance"],
     eligibility: [
@@ -22,6 +23,7 @@ const defaultSchemes = [
   {
     schemeName: "PM Kisan Samman Nidhi",
     category: "Farmer",
+    state: "Maharashtra",
     description: "Income support for small and marginal farmers.",
     benefits: ["₹6,000 per year", "Direct bank transfer"],
     eligibility: ["Farmer status", "Landholding criteria", "Resident of India"],
@@ -40,6 +42,7 @@ const defaultSchemes = [
   {
     schemeName: "National Scholarship for Higher Education",
     category: "Student",
+    state: "Maharashtra",
     description: "Financial aid for higher education students.",
     benefits: ["Tuition fee support", "Stipend for studies"],
     eligibility: [

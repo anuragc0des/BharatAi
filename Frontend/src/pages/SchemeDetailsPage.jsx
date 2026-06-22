@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { getSchemeById } from "../services/api.js";
+import { getSchemeById, simplifySchemeText, evaluateEligibility } from "../services/api.js";
 import { saveScheme, removeSavedScheme, getSavedSchemes } from "../services/dashboardApi.js";
 
 const SchemeDetailsPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { schemeId } = useParams();
   const { user } = useAuth();
   
@@ -17,11 +17,17 @@ const SchemeDetailsPage = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [summary, setSummary] = useState(null);
+  const [simplifying, setSimplifying] = useState(false);
+
+  const [eligibilityResult, setEligibilityResult] = useState(null);
+  const [checkingEligibility, setCheckingEligibility] = useState(false);
+
   useEffect(() => {
     const loadScheme = async () => {
       setLoading(true);
       try {
-        const data = await getSchemeById(schemeId);
+        const data = await getSchemeById(schemeId, language);
         setScheme(data);
       } catch (err) {
         setError(err.message);
@@ -30,7 +36,7 @@ const SchemeDetailsPage = () => {
       }
     };
     void loadScheme();
-  }, [schemeId]);
+  }, [schemeId, language]);
 
   useEffect(() => {
     if (user) {
@@ -57,6 +63,33 @@ const SchemeDetailsPage = () => {
       console.error("Failed to toggle save state:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSimplify = async () => {
+    setSimplifying(true);
+    try {
+      const data = await simplifySchemeText(schemeId, language);
+      setSummary(data.summary);
+    } catch (err) {
+      console.error("Failed to simplify:", err);
+    } finally {
+      setSimplifying(false);
+    }
+  };
+
+  const handleCheckEligibility = async () => {
+    if (!user) return;
+    setCheckingEligibility(true);
+    try {
+      const res = await evaluateEligibility(user.id, schemeId, language);
+      if (res.success && res.data) {
+        setEligibilityResult(res.data);
+      }
+    } catch (err) {
+      console.error("Eligibility check failed:", err);
+    } finally {
+      setCheckingEligibility(false);
     }
   };
 
@@ -109,12 +142,14 @@ const SchemeDetailsPage = () => {
               <svg className={`w-5 h-5 ${isSaved ? 'fill-current text-indigo-600' : 'fill-none stroke-current'}`} viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              {isSaved ? "Saved" : "Save Scheme"}
+              {isSaved ? t("saved") : t("saveScheme")}
             </button>
           )}
         </div>
         
         <p className="mt-3 text-slate-600">{scheme.description}</p>
+
+        {/* AI simplification and eligibility check features removed */}
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
@@ -181,7 +216,7 @@ const SchemeDetailsPage = () => {
               <svg className={`w-5 h-5 ${isSaved ? 'fill-current text-indigo-600' : 'fill-none stroke-current'}`} viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              {isSaved ? "Saved" : "Save Scheme"}
+              {isSaved ? t("saved") : t("saveScheme")}
             </button>
           )}
         </div>

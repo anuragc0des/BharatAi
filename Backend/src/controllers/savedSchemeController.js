@@ -1,5 +1,6 @@
 import SavedScheme from "../models/SavedScheme.js";
 import Scheme from "../models/Scheme.js";
+import { translateScheme } from "../services/translationService.js";
 
 export const saveScheme = async (req, res) => {
   const { schemeId } = req.body;
@@ -20,10 +21,18 @@ export const saveScheme = async (req, res) => {
 };
 
 export const getSavedSchemes = async (req, res) => {
+  const { lang } = req.query;
   const saved = await SavedScheme.find({ userId: req.user._id }).populate(
     "schemeId",
   );
-  res.json(saved.map((item) => item.schemeId));
+  const schemes = saved.map((item) => item.schemeId);
+  if (lang === "hi") {
+    const translated = await Promise.all(
+      schemes.map((s) => translateScheme(s, lang))
+    );
+    return res.json(translated);
+  }
+  res.json(schemes);
 };
 
 export const removeSavedScheme = async (req, res) => {

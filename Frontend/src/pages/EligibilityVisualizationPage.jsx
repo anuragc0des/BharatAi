@@ -3,23 +3,23 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 import { getAllSchemes } from "../services/api.js";
 
 const EligibilityVisualizationPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const data = await getAllSchemes();
+      const data = await getAllSchemes(language);
       setSchemes(data);
       setLoading(false);
     };
     void load();
-  }, []);
+  }, [language]);
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm">
+      <div className="rounded-3xl bg-white border border-slate-200 p-4 sm:p-8 shadow-sm">
         <h1 className="text-3xl font-semibold text-slate-900 mb-4">
           {t("eligibilityVisualization")}
         </h1>

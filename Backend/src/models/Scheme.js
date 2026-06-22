@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const schemeSchema = new mongoose.Schema({
   schemeName: { type: String, required: true },
   category: { type: String, required: true },
+  state: { type: String, default: "Maharashtra" },
   description: { type: String, required: true },
   benefits: { type: [String], default: [] },
   eligibility: { type: [String], default: [] },

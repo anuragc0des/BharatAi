@@ -1,8 +1,21 @@
-# BharatAI
+# BharatAI 🇮🇳
 
-AI-Powered Digital Welfare Copilot for India
+**AI-Powered Digital Welfare Copilot for India**
 
-## What this MVP does
+> **Description:** BharatAI matches Indian citizens to local and national government welfare schemes using intelligent TF-IDF profile vectorization and Large Language Model (LLM) verification layers. Designed to bridge the information gap in welfare distribution.
+> 
+> **Topics:** `react`, `vite`, `nodejs`, `express`, `mongodb`, `python`, `tfidf`, `llm`, `gemma`, `openrouter`, `govtech`, `welfare-schemes`, `hackathon`
+
+---
+
+## 📸 Hero Preview
+
+![BharatAI Hero Dashboard](https://placehold.co/1200x600/1e293b/ffffff?text=BharatAI+Digital+Welfare+Copilot+Dashboard)
+*Figure 1: Citizen dashboard displaying matched schemes, eligibility check visualizations, and the AI welfare copilot.*
+
+---
+
+## 🚀 Key Features
 
 This prototype is a working version of BharatAI built for a hackathon demo. It includes:
 
@@ -222,13 +235,24 @@ The AI capabilities in BharatAI are powered by a dual-layered approach to ensure
 - Improve mobile responsiveness for complex data tables
 - Add deployment-ready configuration and environment docs
 
-## Quick demo flow
+## ⏱️ 60-Second Demo Flow
 
-1. Run backend and frontend
-2. Open the app in browser
-3. Register or login
-4. Submit a profile on the Profile page
-5. View generated scheme recommendations
-6. Save schemes and compare them
-7. View eligibility insights and missed benefits
-8. Use AI Assistant page to ask questions
+Follow these simple steps to witness the core features of BharatAI:
+
+1. **User Sign-Up & Log-in (10s)**: Register a new citizen account and log in.
+2. **Citizen Profile Construction (15s)**: Navigate to the **Profile** wizard. Enter matching parameters: `State: Maharashtra`, `Occupation: Farmer`, `Annual Income: 50,000`, `Category: SC`, `Gender: Male`. Submit the wizard.
+3. **Personalized Scheme Matching (15s)**: Instantly receive a prioritized list of schemes (e.g., *PM-Kisan*). Hover/click the scheme to see clear AI reasoning on why you matched or missed.
+4. **Compare Schemes (10s)**: Bookmark 2-3 matched schemes and navigate to the **Saved Schemes** page. Use the side-by-side **Comparison Matrix** to compare benefit amounts and criteria.
+5. **Interactive Copilot Chat (10s)**: Head to the **AI Assistant** tab. Ask: *"What documents are needed to apply for the PM-Kisan scheme?"*. Receive real-time, context-aware instructions immediately.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+- **Frontend:** React (Vite), Tailwind CSS, React Router
+- **Backend:** Node.js, Express, MongoDB Atlas, Mongoose
+- **Recommendation Engine:** TF-IDF Cosine Similarity + LLM (Gemma-4-31b-it via OpenRouter)
+
+---
+
+> ℹ️ *This project is actively maintained and updated for hackathon showcases and real-world deployment evaluation.*

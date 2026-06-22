@@ -12,6 +12,13 @@ const createToken = (user) => {
   );
 };
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
 export const register = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -27,7 +34,8 @@ export const register = async (req, res) => {
   const user = await AuthUser.create({ email, passwordHash });
   const token = createToken(user);
 
-  res.status(201).json({ token, user: { id: user._id, email: user.email } });
+  res.cookie("token", token, cookieOptions);
+  res.status(201).json({ user: { id: user._id, email: user.email } });
 };
 
 export const login = async (req, res) => {
@@ -47,5 +55,15 @@ export const login = async (req, res) => {
   }
 
   const token = createToken(user);
-  res.json({ token, user: { id: user._id, email: user.email } });
+  res.cookie("token", token, cookieOptions);
+  res.json({ user: { id: user._id, email: user.email } });
+};
+
+export const logout = async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ message: "Logged out successfully" });
 };

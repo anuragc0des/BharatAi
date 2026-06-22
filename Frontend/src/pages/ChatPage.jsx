@@ -6,7 +6,7 @@ import { getChatHistory, sendChatMessage } from "../services/api.js";
 import ReactMarkdown from "react-markdown";
 
 const ChatPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState("");
@@ -54,7 +54,7 @@ const ChatPage = () => {
 
     try {
       // Backend calls OpenRouter and returns the full conversation object
-      const conversation = await sendChatMessage({ userId, question: currentQuestion });
+      const conversation = await sendChatMessage({ userId, question: currentQuestion, lang: language });
       
       // Update the last message with the real answer
       setMessages((prev) => {
@@ -83,7 +83,7 @@ const ChatPage = () => {
           {messages.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
               <span className="text-4xl mb-3 block">👋</span>
-              No messages yet. Ask a question to get started!
+              {t("noMessages")}
             </div>
           ) : (
             messages.map((item, index) => (
@@ -92,7 +92,7 @@ const ChatPage = () => {
                 className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
               >
                 <p className="text-sm font-medium text-slate-700 mb-3">
-                  <span className="font-semibold text-slate-900">You:</span> {item.question}
+                  <span className="font-semibold text-slate-900">{t("you")}:</span> {item.question}
                 </p>
                 {item.answer ? (
                   <div className="border-t border-slate-200 pt-3 text-slate-800 text-sm prose prose-slate max-w-none">
@@ -125,7 +125,7 @@ const ChatPage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                     </svg>
-                    BharatAI is typing...
+                    {t("typing")}
                   </div>
                 )}
               </div>

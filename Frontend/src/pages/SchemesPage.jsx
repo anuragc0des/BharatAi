@@ -4,7 +4,7 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 import { getAllSchemes } from "../services/api.js";
 
 const SchemesPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -14,7 +14,7 @@ const SchemesPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getAllSchemes();
+        const data = await getAllSchemes(language);
         setSchemes(data);
       } catch (err) {
         setError(err.message);
@@ -23,7 +23,7 @@ const SchemesPage = () => {
       }
     };
     void fetchSchemes();
-  }, []);
+  }, [language]);
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

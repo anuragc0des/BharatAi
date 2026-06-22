@@ -5,10 +5,12 @@ import {
   getSavedSchemes,
   removeSavedScheme,
 } from "../controllers/savedSchemeController.js";
+import { validate } from "../middleware/validate.js";
+import { savedSchemeSchema } from "../validation/schemas.js";
 
 const router = express.Router();
 router.use(authMiddleware);
-router.post("/", saveScheme);
+router.post("/", validate(savedSchemeSchema), saveScheme);
 router.get("/", getSavedSchemes);
 router.delete("/:schemeId", removeSavedScheme);
 

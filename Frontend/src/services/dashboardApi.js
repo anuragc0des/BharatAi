@@ -1,6 +1,6 @@
 import { request } from "./api.js";
 
-export const getSavedSchemes = () => request("/saved-schemes");
+export const getSavedSchemes = (lang) => request(`/saved-schemes?lang=${lang || ""}`);
 export const saveScheme = (schemeId) =>
   request("/saved-schemes", {
     method: "POST",

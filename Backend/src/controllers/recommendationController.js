@@ -2,6 +2,7 @@ import Recommendation from "../models/Recommendation.js";
 import Scheme from "../models/Scheme.js";
 import User from "../models/User.js";
 import { getRecommendations } from "../services/recommendationService.js";
+import { translateScheme } from "../services/translationService.js";
 
 const getMatchScore = (user, scheme) => {
   let score = 0;
@@ -92,7 +93,7 @@ export const getRecommendationsByUser = async (req, res) => {
 // New Smart Recommendation Endpoint using Python ML and OpenRouter LLM
 export const generateSmartRecommendations = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, lang } = req.body;
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
@@ -104,6 +105,7 @@ export const generateSmartRecommendations = async (req, res) => {
 
     // Prepare user profile for Python script (all fields for maximum accuracy)
     const userProfile = {
+      userId: user._id,
       age: user.age,
       gender: user.gender,
       maritalStatus: user.maritalStatus || "Single",
@@ -132,12 +134,14 @@ export const generateSmartRecommendations = async (req, res) => {
     };
 
     // Call the Python ML / LLM service
-    const smartResults = await getRecommendations(userProfile);
+    const smartResults = await getRecommendations(userProfile, lang);
 
-    // Parse LLM Results and save to Recommendation DB? 
-    // For now we'll just return them so the frontend can display them directly,
-    // or we can map them back to DB schemes and save.
-    
+    if (lang === "hi" && smartResults.top_ml_matches) {
+      smartResults.top_ml_matches = await Promise.all(
+        smartResults.top_ml_matches.map((s) => translateScheme(s, lang))
+      );
+    }
+
     return res.status(200).json({
       success: true,
       data: smartResults
@@ -147,6 +151,69 @@ export const generateSmartRecommendations = async (req, res) => {
     return res.status(500).json({ 
       success: false, 
       message: "Failed to generate smart recommendations", 
+      details: error.message 
+    });
+  }
+};
+
+export const evaluateEligibility = async (req, res) => {
+  try {
+    const { userId, schemeId, lang } = req.body;
+    if (!userId || !schemeId) {
+      return res.status(400).json({ message: "userId and schemeId are required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const scheme = await Scheme.findById(schemeId);
+    if (!scheme) return res.status(404).json({ message: "Scheme not found" });
+
+    const userProfile = {
+      age: user.age,
+      gender: user.gender,
+      maritalStatus: user.maritalStatus || "Single",
+      state: user.state,
+      district: user.district || "",
+      residenceType: user.residenceType || "Urban",
+      education: user.education,
+      occupation: user.occupation,
+      annualIncome: user.annualIncome,
+      bplStatus: user.bplStatus || "No",
+      rationCardType: user.rationCardType || "None",
+      category: user.category,
+      religion: user.religion || "Not Specified",
+      minority: user.minority || "No",
+      disabilityStatus: user.disabilityStatus || "No",
+      disabilityPercentage: user.disabilityPercentage || 0,
+      studentStatus: user.studentStatus,
+      farmerStatus: user.farmerStatus,
+      entrepreneurStatus: user.entrepreneurStatus,
+      employmentStatus: user.employmentStatus,
+      seniorCitizen: user.seniorCitizen || "No",
+      exServiceman: user.exServiceman || "No",
+      constructionWorker: user.constructionWorker || "No",
+      landOwnership: user.landOwnership || "No",
+      landSizeAcres: user.landSizeAcres || 0,
+    };
+
+    const response = await fetch("http://127.0.0.1:5003/evaluate-eligibility", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_profile: userProfile, scheme, lang }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Python service responded with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error("Evaluate Eligibility Error:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Failed to evaluate eligibility", 
       details: error.message 
     });
   }

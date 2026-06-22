@@ -3,7 +3,7 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 import { getAllSchemes } from "../services/api.js";
 
 const SchemeComparisonPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [schemes, setSchemes] = useState([]);
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,12 +11,12 @@ const SchemeComparisonPage = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const all = await getAllSchemes();
+      const all = await getAllSchemes(language);
       setSchemes(all);
       setLoading(false);
     };
     void load();
-  }, []);
+  }, [language]);
 
   const toggleSelect = (id) => {
     setSelected((prev) =>
@@ -32,12 +32,12 @@ const SchemeComparisonPage = () => {
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm">
+      <div className="rounded-3xl bg-white border border-slate-200 p-4 sm:p-8 shadow-sm">
         <h1 className="text-3xl font-semibold text-slate-900 mb-4">
           {t("compareSchemes")}
         </h1>
         <p className="text-slate-600 mb-6">
-          Select up to two schemes to compare core details.
+          {t("compareDescription")}
         </p>
 
         {loading && <p className="text-slate-600">Loading…</p>}
@@ -63,36 +63,61 @@ const SchemeComparisonPage = () => {
         </div>
 
         {comparisonItems.length > 0 && (
-          <div className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-6">
+          <div className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:p-6 overflow-hidden">
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">
               {t("comparison")}
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {comparisonItems.map((scheme) => (
-                <div
-                  key={scheme._id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4"
-                >
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {scheme.schemeName}
-                  </h3>
-                  <p className="mt-2 text-slate-600">{scheme.description}</p>
-                  <div className="mt-4 space-y-3 text-sm text-slate-700">
-                    <div>
-                      <p className="font-semibold">Benefits</p>
-                      <p>{scheme.benefits.join(", ")}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Eligibility</p>
-                      <p>{scheme.eligibility.join(", ")}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Docs</p>
-                      <p>{scheme.requiredDocuments.join(", ")}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <table className="w-full min-w-[600px] border-collapse text-left text-sm text-slate-700">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="p-4 font-semibold text-slate-900 w-1/4">{t("featureDetails")}</th>
+                    {comparisonItems.map((scheme) => (
+                      <th key={scheme._id} className="p-4 font-semibold text-slate-900 w-3/8">
+                        {scheme.schemeName}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="p-4 font-semibold text-slate-900 bg-slate-50/50">{t("description")}</td>
+                    {comparisonItems.map((scheme) => (
+                      <td key={scheme._id} className="p-4 align-top">{scheme.description}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-slate-900 bg-slate-50/50">{t("benefits")}</td>
+                    {comparisonItems.map((scheme) => (
+                      <td key={scheme._id} className="p-4 align-top">
+                        <ul className="list-disc pl-4 space-y-1">
+                          {scheme.benefits.map((b, idx) => <li key={idx}>{b}</li>)}
+                        </ul>
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-slate-900 bg-slate-50/50">{t("eligibility")}</td>
+                    {comparisonItems.map((scheme) => (
+                      <td key={scheme._id} className="p-4 align-top">
+                        <ul className="list-disc pl-4 space-y-1">
+                          {scheme.eligibility.map((e, idx) => <li key={idx}>{e}</li>)}
+                        </ul>
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-slate-900 bg-slate-50/50">{t("requiredDocuments")}</td>
+                    {comparisonItems.map((scheme) => (
+                      <td key={scheme._id} className="p-4 align-top">
+                        <ul className="list-disc pl-4 space-y-1">
+                          {scheme.requiredDocuments.map((d, idx) => <li key={idx}>{d}</li>)}
+                        </ul>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         )}

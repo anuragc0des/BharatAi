@@ -3,7 +3,7 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 import { getAllSchemes } from "../services/api.js";
 
 const SearchSchemesPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [schemes, setSchemes] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -12,12 +12,12 @@ const SearchSchemesPage = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const data = await getAllSchemes();
+      const data = await getAllSchemes(language);
       setSchemes(data);
       setLoading(false);
     };
     void load();
-  }, []);
+  }, [language]);
 
   const categories = useMemo(
     () => [...new Set(schemes.map((scheme) => scheme.category))],

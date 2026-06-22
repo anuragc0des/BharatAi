@@ -5,23 +5,132 @@ import { useAuth } from "../context/AuthContext.jsx";
 import {
   getMyProfile,
   getSmartRecommendations,
+  simplifySchemeText,
+  evaluateEligibility,
 } from "../services/api.js";
 import { getSavedSchemes } from "../services/dashboardApi.js";
 
+const SavedSchemeCard = ({ scheme, profile, user }) => {
+  const { t, language } = useLanguage();
+  const [summary, setSummary] = useState(null);
+  const [simplifying, setSimplifying] = useState(false);
+  const [eligibilityResult, setEligibilityResult] = useState(null);
+  const [checkingEligibility, setCheckingEligibility] = useState(false);
+
+  const handleSimplify = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSimplifying(true);
+    try {
+      const data = await simplifySchemeText(scheme._id, language);
+      setSummary(data.summary);
+    } catch (err) {
+      console.error("Failed to simplify:", err);
+    } finally {
+      setSimplifying(false);
+    }
+  };
+
+  const handleCheckEligibility = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) return;
+    setCheckingEligibility(true);
+    try {
+      const res = await evaluateEligibility(user.id, scheme._id, language);
+      if (res.success && res.data) {
+        setEligibilityResult(res.data);
+      }
+    } catch (err) {
+      console.error("Eligibility check failed:", err);
+    } finally {
+      setCheckingEligibility(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 hover:border-indigo-300 hover:shadow-sm transition">
+      <Link to={`/schemes/${scheme._id}`} className="block">
+        <h3 className="font-semibold text-slate-900 leading-snug hover:text-indigo-600 transition-colors">
+          {scheme.schemeName}
+        </h3>
+        <p className="mt-1 text-xs text-slate-500 line-clamp-2">{scheme.description}</p>
+      </Link>
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        {!summary ? (
+          <button
+            onClick={handleSimplify}
+            disabled={simplifying}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors disabled:opacity-50"
+          >
+            <span>✨</span>
+            {simplifying ? t("simplifying") : t("simplifyWithAi")}
+          </button>
+        ) : (
+          <div className="w-full rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-xs text-indigo-800">
+            <div className="flex items-center gap-1.5 mb-1 font-bold text-indigo-900">
+              <span>✨</span>
+              <span>{t("aiSummary")}</span>
+            </div>
+            <p className="whitespace-pre-wrap">{summary}</p>
+          </div>
+        )}
+
+        {!eligibilityResult ? (
+          <button
+            onClick={handleCheckEligibility}
+            disabled={checkingEligibility}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+          >
+            <span>🎯</span>
+            {checkingEligibility ? t("checking") : t("amIEligible")}
+          </button>
+        ) : (
+          <div className={`w-full rounded-xl border p-3 text-xs ${
+            eligibilityResult.isEligible ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
+          }`}>
+            <div className="flex items-center gap-1.5 mb-1 font-bold">
+              <span>{eligibilityResult.isEligible ? "✅" : "❌"}</span>
+              <span className={eligibilityResult.isEligible ? "text-emerald-900" : "text-red-900"}>
+                {eligibilityResult.isEligible ? t("youAreEligible") : t("notEligible")}
+              </span>
+            </div>
+            <p className="mb-1"><span className="font-semibold">{t("reasoning")}:</span> {eligibilityResult.reasoning}</p>
+            {eligibilityResult.missingRequirements && eligibilityResult.missingRequirements.length > 0 && (
+              <div>
+                <span className="font-semibold">{t("missingRequirements")}:</span>
+                <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                  {eligibilityResult.missingRequirements.map((req, i) => (
+                    <li key={i}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Badge colours for eligibility
-const EligibilityBadge = ({ isEligible }) =>
-  isEligible ? (
+const EligibilityBadge = ({ isEligible }) => {
+  const { t } = useLanguage();
+  return isEligible ? (
     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-      ✓ Eligible
+      ✓ {t("eligible")}
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">
-      ✗ Not Eligible
+      ✗ {t("notEligible")}
     </span>
   );
+};
 
 // Card for a single AI-assessed scheme
 const SmartSchemeCard = ({ mlMatch, llmInfo }) => {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const score = Math.round((mlMatch.match_score || 0) * 100);
 
@@ -41,7 +150,7 @@ const SmartSchemeCard = ({ mlMatch, llmInfo }) => {
               color: score >= 70 ? "#15803d" : score >= 40 ? "#a16207" : "#b91c1c",
             }}
           >
-            {score}% Match
+            {score}% {t("match")}
           </span>
         </div>
       </div>
@@ -60,14 +169,14 @@ const SmartSchemeCard = ({ mlMatch, llmInfo }) => {
 
         {llmInfo?.reasoning && (
           <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-800">
-            <span className="font-semibold">🤖 AI Analysis: </span>
+            <span className="font-semibold">🤖 {t("aiAnalysis")} </span>
             {llmInfo.reasoning}
           </div>
         )}
 
         {llmInfo?.missingRequirements?.length > 0 && (
           <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-800">
-            <p className="font-semibold mb-1">⚠ Missing Requirements:</p>
+            <p className="font-semibold mb-1">⚠ {t("missingRequirements")}:</p>
             <ul className="list-disc list-inside space-y-0.5">
               {llmInfo.missingRequirements.map((req, i) => (
                 <li key={i}>{req}</li>
@@ -82,7 +191,7 @@ const SmartSchemeCard = ({ mlMatch, llmInfo }) => {
               onClick={() => setExpanded((v) => !v)}
               className="text-xs font-semibold text-indigo-600 hover:underline"
             >
-              {expanded ? "▲ Hide benefits" : "▼ Show benefits"}
+              {expanded ? `▲ ${t("hideBenefits")}` : `▼ ${t("showBenefits")}`}
             </button>
             {expanded && (
               <ul className="mt-2 list-disc list-inside space-y-1 text-sm text-slate-700">
@@ -104,7 +213,7 @@ const SmartSchemeCard = ({ mlMatch, llmInfo }) => {
             rel="noopener noreferrer"
             className="inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 transition-colors"
           >
-            Apply Now ↗
+            {t("applyNow")}
           </a>
         )}
       </div>
@@ -113,7 +222,7 @@ const SmartSchemeCard = ({ mlMatch, llmInfo }) => {
 };
 
 const DashboardPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -141,7 +250,7 @@ const DashboardPage = () => {
         setLoadingProfile(false);
       }
     };
-    fetchProfile();
+    void fetchProfile();
   }, [user]);
 
   // 2. Fetch Recs & Saved Schemes if Profile exists
@@ -151,7 +260,7 @@ const DashboardPage = () => {
     const loadRecs = async () => {
       setLoadingRecs(true);
       try {
-        const result = await getSmartRecommendations(profile._id);
+        const result = await getSmartRecommendations(profile._id, language);
         setSmartData(result.data || result);
       } catch (err) {
         setRecsError(err.message);
@@ -163,7 +272,7 @@ const DashboardPage = () => {
     const loadSaved = async () => {
       setLoadingSaved(true);
       try {
-        const schemes = await getSavedSchemes();
+        const schemes = await getSavedSchemes(language);
         setSavedSchemes(schemes);
       } catch (err) {
         console.error(err);
@@ -174,7 +283,7 @@ const DashboardPage = () => {
 
     loadRecs();
     loadSaved();
-  }, [profile]);
+  }, [profile, language]);
 
   const mergedSmartResults = () => {
     if (!smartData) return [];
@@ -288,14 +397,12 @@ const DashboardPage = () => {
           ) : (
             <div className="space-y-4">
               {savedSchemes.map((scheme) => (
-                <Link
+                <SavedSchemeCard
                   key={scheme._id}
-                  to={`/schemes/${scheme._id}`}
-                  className="block rounded-2xl border border-slate-200 bg-white p-4 hover:border-indigo-300 hover:shadow-sm transition"
-                >
-                  <h3 className="font-semibold text-slate-900 leading-snug">{scheme.schemeName}</h3>
-                  <p className="mt-1 text-xs text-slate-500 line-clamp-2">{scheme.description}</p>
-                </Link>
+                  scheme={scheme}
+                  profile={profile}
+                  user={user}
+                />
               ))}
             </div>
           )}

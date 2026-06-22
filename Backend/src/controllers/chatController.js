@@ -1,9 +1,10 @@
+import { callOpenRouterWithFallback } from "../utils/openrouter.js";
 import Conversation from "../models/Conversation.js";
 import User from "../models/User.js";
 import Scheme from "../models/Scheme.js";
 
 export const sendChat = async (req, res) => {
-  const { userId, question } = req.body;
+  const { userId, question, lang } = req.body;
   if (!userId || !question) {
     return res.status(400).json({ message: "userId and question are required" });
   }
@@ -35,33 +36,19 @@ export const sendChat = async (req, res) => {
 
   let answer = "";
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:5002",
-        "X-Title": "BharatAI",
+    const systemInstruction = "You are BharatAI, an expert AI assistant that helps Indian citizens understand and discover government schemes, scholarships, and benefits. Be polite, concise, and highly accurate. If you don't know the answer, say so." + 
+      (lang === "hi" ? "\n\nCRITICAL INSTRUCTION: You MUST respond entirely in Hindi (using clear, natural Hindi language and Devanagari script). Keep the tone respectful and helpful." : "") + 
+      userContext + schemesContext;
+
+    const messages = [
+      {
+        role: "system",
+        content: systemInstruction
       },
-      body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free",
-        messages: [
-          {
-            role: "system",
-            content: "You are BharatAI, an expert AI assistant that helps Indian citizens understand and discover government schemes, scholarships, and benefits. Be polite, concise, and highly accurate. If you don't know the answer, say so." + userContext + schemesContext
-          },
-          { role: "user", content: question }
-        ]
-      })
-    });
+      { role: "user", content: question }
+    ];
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`OpenRouter API error: ${response.statusText} - ${errText}`);
-    }
-
-    const data = await response.json();
-    answer = data.choices[0].message.content;
+    answer = await callOpenRouterWithFallback(messages);
   } catch (err) {
     console.error("Chat Error:", err);
     return res.status(500).json({ message: "Failed to generate AI response. Please try again." });

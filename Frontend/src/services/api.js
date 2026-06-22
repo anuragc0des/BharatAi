@@ -1,24 +1,35 @@
+import toast from "react-hot-toast";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
 
-const getAuthToken = () => window.localStorage.getItem("bharatai-token") || "";
-
 const request = async (path, options = {}) => {
-  const token = getAuthToken();
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : undefined,
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+      ...options,
+    });
 
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.message || "Server error");
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      // Extract validation messages if available
+      const errMsg = payload.message || (payload.errors && payload.errors.map(e => e.message).join(", ")) || "Server error";
+      toast.error(errMsg);
+      throw new Error(errMsg);
+    }
+
+    return payload;
+  } catch (error) {
+    if (error.name === "TypeError" && error.message === "Failed to fetch") {
+      toast.error("Network error: Unable to connect to the backend server.");
+    } else if (!error.message || error.message === "Server error") {
+      toast.error(error.message || "An unexpected error occurred.");
+    }
+    throw error;
   }
-
-  return payload;
 };
 
 export { request };
@@ -39,13 +50,19 @@ export const createRecommendations = (userId) =>
     method: "POST",
     body: JSON.stringify({ userId }),
   });
-export const getSmartRecommendations = (userId) =>
+export const getSmartRecommendations = (userId, lang) =>
   request("/recommendations/smart", {
     method: "POST",
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify({ userId, lang }),
+  });
+export const evaluateEligibility = (userId, schemeId, lang) =>
+  request("/recommendations/evaluate", {
+    method: "POST",
+    body: JSON.stringify({ userId, schemeId, lang }),
   });
 export const getSchemeById = (schemeId) => request(`/schemes/${schemeId}`);
 export const getAllSchemes = () => request("/schemes");
+export const simplifySchemeText = (schemeId, lang) => request(`/schemes/${schemeId}/simplify?lang=${lang}`);
 export const sendChatMessage = (payload) =>
   request("/chat", {
     method: "POST",
@@ -61,4 +78,8 @@ export const registerUser = (credentials) =>
   request("/auth/register", {
     method: "POST",
     body: JSON.stringify(credentials),
+  });
+export const logoutUser = () =>
+  request("/auth/logout", {
+    method: "POST",
   });
